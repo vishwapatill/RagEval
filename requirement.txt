@@ -1,0 +1,32 @@
+# requirements.txt
+# RAG chunking comparison project: Fixed-size vs Recursive vs Docling HybridChunker
+#
+# Install with:
+#   pip install -r requirements.txt --break-system-packages
+#
+# GPU note (RTX 4050): pip's default torch wheel (pulled in automatically by
+# sentence-transformers / docling below) ships with CUDA support on Linux/Windows
+# already. If `torch.cuda.is_available()` comes back False after install, get the
+# right build for your CUDA version from https://pytorch.org/get-started/locally/
+# before installing the rest of this file.
+
+# --- Evaluation harness core (rag_chunking_evaluator.py) ---
+numpy==2.5.2
+pandas==3.0.5
+rapidfuzz==3.14.5
+
+# --- Vanilla pipelines: PDF text extraction + chunking ---
+pdfplumber==0.11.10
+langchain-text-splitters==1.1.2
+
+# --- Docling pipeline: parsing + structure-aware chunking ---
+docling==2.119.0
+docling-core==2.91.0
+transformers==5.15.0
+
+# --- Embeddings (shared across all three pipelines) ---
+langchain-huggingface==1.2.2
+sentence-transformers==5.7.0
+
+# --- LLM: Gemma (generation) + Gemini (RAGAS-style judge) ---
+google-genai==2.17.0
