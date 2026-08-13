@@ -36,10 +36,24 @@ class DoclingParser(Parser):
     Needs the full `docling` package (DocumentConverter), not just
     docling-core.
     """
+    def __init__(self, use_gpu: bool = True):
+        from docling.document_converter import DocumentConverter, PdfFormatOption
+        from docling.datamodel.pipeline_options import (
+            PdfPipelineOptions, AcceleratorOptions, AcceleratorDevice,
+        )
+        from docling.datamodel.base_models import InputFormat
 
-    def __init__(self):
-        from docling.document_converter import DocumentConverter
-        self.converter = DocumentConverter()
+        pipeline_options = PdfPipelineOptions()
+        pipeline_options.accelerator_options = AcceleratorOptions(
+            num_threads=8,
+            device=AcceleratorDevice.CUDA if use_gpu else AcceleratorDevice.CPU,
+        )
+
+        self.converter = DocumentConverter(
+            format_options={
+                InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
+            }
+        )
 
     def parse(self, source: str) -> Document:
         dl_doc = self.converter.convert(source).document
