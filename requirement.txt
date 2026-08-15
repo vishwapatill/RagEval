@@ -11,22 +11,22 @@
 # before installing the rest of this file.
 
 # --- Evaluation harness core (rag_chunking_evaluator.py) ---
-numpy==2.5.2
-pandas==3.0.5
-rapidfuzz==3.14.5
+numpy
+pandas
+rapidfuzz
 
 # --- Vanilla pipelines: PDF text extraction + chunking ---
-pdfplumber==0.11.10
-langchain-text-splitters==1.1.2
+pdfplumber
+langchain-text-splitters
 
 # --- Docling pipeline: parsing + structure-aware chunking ---
-docling==2.119.0
-docling-core==2.91.0
-transformers==5.15.0
+docling
+docling-core
+transformers
 
 # --- Embeddings (shared across all three pipelines) ---
-langchain-huggingface==1.2.2
-sentence-transformers==5.7.0
+langchain-huggingface
+sentence-transformers
 
 # --- LLM: Gemma (generation) + Gemini (RAGAS-style judge) ---
-google-genai==2.17.0
+google-genai

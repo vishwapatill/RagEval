@@ -1,0 +1,295 @@
+<style>
+  * { box-sizing: border-box; }
+  .rag-root { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--text-primary); }
+  .rag-root button { font-family: inherit; }
+
+  .rag-stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px; margin-bottom: 16px;
+  }
+  .rag-stat { background: var(--surface-1); border-radius: var(--radius); padding: 10px 12px; }
+  .rag-stat-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+  .rag-stat-value { font-size: 18px; font-weight: 500; color: var(--text-primary); }
+
+  .rag-container { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 14px; min-height: 560px; }
+  @media (max-width: 720px) { .rag-container { grid-template-columns: 1fr; } }
+
+  .rag-panel { background: var(--surface-2); border: 0.5px solid var(--border); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; min-height: 0; }
+
+  .rag-panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .rag-panel-title { font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .rag-count { font-size: 12px; color: var(--text-muted); }
+
+  .rag-search { position: relative; margin-bottom: 8px; }
+  .rag-search input {
+    width: 100%; padding: 8px 10px 8px 30px; border: 0.5px solid var(--border);
+    border-radius: var(--radius); font-size: 13px;
+    background: var(--surface-1); color: var(--text-primary);
+  }
+  .rag-search input:focus { outline: none; border-color: var(--border-accent); box-shadow: 0 0 0 2px var(--bg-accent); }
+  .rag-search .ti { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-size: 15px; color: var(--text-muted); }
+
+  .rag-filters { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+  .rag-filter {
+    padding: 3px 9px; border-radius: 999px; font-size: 11px;
+    border: 0.5px solid var(--border); background: transparent; color: var(--text-secondary);
+    cursor: pointer; transition: all 150ms ease;
+  }
+  .rag-filter:hover { border-color: var(--border-strong); color: var(--text-primary); }
+  .rag-filter.active { background: var(--text-primary); color: var(--surface-2); border-color: var(--text-primary); }
+
+  .rag-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; margin: -4px; padding: 4px; max-height: 500px; }
+  .rag-item {
+    padding: 10px; border: 0.5px solid transparent; border-radius: var(--radius);
+    cursor: pointer; background: transparent; text-align: left;
+    font-size: 13px; line-height: 1.4; color: var(--text-primary);
+    transition: background 120ms ease;
+  }
+  .rag-item:hover { background: var(--surface-1); }
+  .rag-item.active { background: var(--bg-accent); border-color: var(--border-accent); }
+  .rag-item.active .rag-item-id { color: var(--text-accent); }
+  .rag-item-id { font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); margin-bottom: 3px; letter-spacing: 0.3px; }
+  .rag-item-text { color: var(--text-primary); }
+  .rag-item-type { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 3px; background: var(--surface-2); color: var(--text-secondary); margin-top: 5px; }
+  .rag-item.active .rag-item-type { background: rgba(255,255,255,0.2); color: var(--text-accent); }
+
+  .rag-detail { overflow-y: auto; max-height: 720px; padding-right: 4px; }
+
+  .rag-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 400px; text-align: center; color: var(--text-muted); }
+  .rag-empty .ti { font-size: 32px; margin-bottom: 8px; opacity: 0.4; }
+  .rag-empty p { margin: 0; font-size: 13px; }
+
+  .rag-detail-header { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 0.5px solid var(--border); }
+  .rag-detail-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+  .rag-detail-id { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+  .rag-detail-type { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: var(--bg-accent); color: var(--text-accent); }
+  .rag-detail-query { font-size: 16px; font-weight: 500; line-height: 1.5; color: var(--text-primary); margin: 0; }
+
+  .rag-section-title { font-size: 11px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 8px; display: flex; align-items: center; gap: 6px; }
+  .rag-section-title .ti { font-size: 14px; }
+
+  .rag-answer {
+    background: var(--surface-1); border-left: 3px solid var(--border-accent); border-radius: var(--radius);
+    padding: 12px 14px; font-size: 14px; line-height: 1.6; color: var(--text-primary);
+  }
+
+  .rag-chunks { display: flex; flex-direction: column; gap: 8px; }
+  .rag-chunk { background: var(--surface-1); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 12px; font-size: 13px; line-height: 1.55; transition: border-color 150ms ease; }
+  .rag-chunk:hover { border-color: var(--border-strong); }
+  .rag-chunk-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; }
+  .rag-chunk-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .rag-chunk-rank { font-weight: 500; font-size: 12px; color: var(--text-secondary); background: var(--surface-2); padding: 2px 8px; border-radius: 4px; flex-shrink: 0; }
+  .rag-chunk-meta { display: flex; gap: 10px; font-size: 11px; color: var(--text-secondary); min-width: 0; overflow: hidden; }
+  .rag-chunk-meta span { display: flex; align-items: center; gap: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rag-chunk-meta .ti { font-size: 12px; }
+  .rag-chunk-score { font-family: var(--font-mono); font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; flex-shrink: 0; }
+  .rag-score-bar { height: 3px; background: var(--surface-2); border-radius: 2px; margin: 6px 0 8px; overflow: hidden; }
+  .rag-score-fill { height: 100%; border-radius: 2px; transition: width 300ms ease; }
+  .rag-chunk-text { color: var(--text-primary); margin: 0; }
+
+  .rag-list::-webkit-scrollbar, .rag-detail::-webkit-scrollbar { width: 6px; }
+  .rag-list::-webkit-scrollbar-thumb, .rag-detail::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+</style>
+
+<div class="rag-root">
+  <div class="rag-stats" id="ragStats"></div>
+  <div class="rag-container">
+    <div class="rag-panel">
+      <div class="rag-panel-header">
+        <span class="rag-panel-title">Queries</span>
+        <span class="rag-count" id="ragCount">0</span>
+      </div>
+      <div class="rag-search">
+        <i class="ti ti-search" aria-hidden="true"></i>
+        <input type="text" id="ragSearch" placeholder="Search..." />
+      </div>
+      <div class="rag-filters" id="ragFilters"></div>
+      <div class="rag-list" id="ragList"></div>
+    </div>
+    <div class="rag-panel">
+      <div class="rag-detail" id="ragDetail">
+        <div class="rag-empty">
+          <i class="ti ti-file-search" aria-hidden="true"></i>
+          <p>Select a query to view retrieved chunks</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = [
+  {
+    query_id: 'q001', query_type: 'definition',
+    query: 'What are the main benefits of machine learning in healthcare?',
+    answer: 'Machine learning improves diagnostic accuracy, enables personalized treatment plans, automates routine tasks, and reduces healthcare costs through predictive analytics.',
+    top_5: [
+      { chunk: 'Machine learning algorithms have revolutionized healthcare by enabling doctors to make more accurate diagnoses based on medical imaging and patient data analysis.', doc_id: 'doc_001', page_no: 5, similarity: 0.94 },
+      { chunk: 'Personalized medicine uses ML to tailor treatment plans based on individual patient genetic profiles and medical history.', doc_id: 'doc_002', page_no: 12, similarity: 0.89 },
+      { chunk: 'Predictive analytics powered by machine learning helps hospitals anticipate patient admission rates and manage resources efficiently.', doc_id: 'doc_003', page_no: 8, similarity: 0.87 },
+      { chunk: 'Deep learning models trained on large datasets of medical images can detect diseases like cancer at earlier stages than human radiologists.', doc_id: 'doc_004', page_no: 15, similarity: 0.85 },
+      { chunk: 'Natural language processing in healthcare allows automated processing of patient records, reducing administrative burden on medical staff.', doc_id: 'doc_005', page_no: 9, similarity: 0.81 }
+    ]
+  },
+  {
+    query_id: 'q002', query_type: 'analysis',
+    query: 'How does climate change affect global supply chains?',
+    answer: 'Climate change disrupts supply chains through extreme weather events, resource scarcity, and infrastructure damage, forcing companies to diversify suppliers and increase inventory.',
+    top_5: [
+      { chunk: 'Extreme weather events such as hurricanes and floods have directly impacted manufacturing facilities and transportation networks worldwide.', doc_id: 'doc_010', page_no: 22, similarity: 0.92 },
+      { chunk: 'Rising temperatures reduce crop yields in agriculture-dependent regions, creating shortages of raw materials for food production companies.', doc_id: 'doc_011', page_no: 18, similarity: 0.88 },
+      { chunk: 'Supply chain resilience requires companies to develop multi-sourcing strategies to mitigate risks from climate-related disruptions.', doc_id: 'doc_012', page_no: 25, similarity: 0.86 },
+      { chunk: 'Water scarcity in key industrial regions threatens production capabilities for semiconductor and chemical manufacturers.', doc_id: 'doc_013', page_no: 20, similarity: 0.51 },
+      { chunk: 'Companies are increasingly investing in green logistics and renewable energy to reduce their carbon footprint.', doc_id: 'doc_014', page_no: 30, similarity: 0.42 }
+    ]
+  },
+  {
+    query_id: 'q003', query_type: 'definition',
+    query: 'What is quantum computing?',
+    answer: 'Quantum computing uses quantum bits (qubits) that exist in superposition to process information exponentially faster than classical computers.',
+    top_5: [
+      { chunk: 'Quantum computers leverage quantum mechanics principles like superposition and entanglement to perform calculations exponentially faster.', doc_id: 'doc_020', page_no: 42, similarity: 0.96 },
+      { chunk: 'Unlike classical bits that are either 0 or 1, quantum bits can exist in both states simultaneously until measured.', doc_id: 'doc_021', page_no: 40, similarity: 0.93 },
+      { chunk: 'Quantum entanglement allows qubits to be correlated in ways that have no classical analog, enabling parallel processing.', doc_id: 'doc_022', page_no: 44, similarity: 0.91 },
+      { chunk: 'Current quantum computers are limited by quantum decoherence, where qubits lose their quantum properties.', doc_id: 'doc_023', page_no: 45, similarity: 0.88 },
+      { chunk: 'Potential applications of quantum computing include drug discovery, cryptography, and optimization problems.', doc_id: 'doc_024', page_no: 48, similarity: 0.85 }
+    ]
+  },
+  {
+    query_id: 'q004', query_type: 'comparison',
+    query: 'Compare fixed-size vs recursive chunking strategies',
+    answer: 'Fixed-size chunking splits text at exact character/token boundaries, while recursive chunking respects natural separators like paragraphs and sentences, preserving semantic coherence.',
+    top_5: [
+      { chunk: 'Recursive chunking attempts to split text along semantic boundaries first, falling back to smaller units if needed.', doc_id: 'doc_030', page_no: 3, similarity: 0.88 },
+      { chunk: 'Fixed-size chunking is simple and predictable but may cut sentences mid-word, breaking context.', doc_id: 'doc_031', page_no: 5, similarity: 0.84 },
+      { chunk: 'The choice of chunking strategy significantly impacts retrieval quality in RAG systems.', doc_id: 'doc_032', page_no: 2, similarity: 0.72 },
+      { chunk: 'Chunk overlap can help preserve context across chunk boundaries in fixed-size approaches.', doc_id: 'doc_033', page_no: 7, similarity: 0.68 },
+      { chunk: 'Recursive splitters use hierarchical delimiters like double newlines, then single newlines, then spaces.', doc_id: 'doc_034', page_no: 4, similarity: 0.65 }
+    ]
+  }
+];
+
+let selectedId = null;
+let searchTerm = '';
+let activeType = 'all';
+
+const listEl = document.getElementById('ragList');
+const detailEl = document.getElementById('ragDetail');
+const searchEl = document.getElementById('ragSearch');
+const countEl = document.getElementById('ragCount');
+const filtersEl = document.getElementById('ragFilters');
+const statsEl = document.getElementById('ragStats');
+
+function scoreColor(s) {
+  if (s >= 0.85) return { fill: 'var(--bg-success)', text: 'var(--text-success)', bar: '#1D9E75' };
+  if (s >= 0.70) return { fill: 'var(--bg-accent)', text: 'var(--text-accent)', bar: '#378ADD' };
+  if (s >= 0.55) return { fill: 'var(--bg-warning)', text: 'var(--text-warning)', bar: '#EF9F27' };
+  return { fill: 'var(--bg-danger)', text: 'var(--text-danger)', bar: '#E24B4A' };
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderStats() {
+  const total = DATA.length;
+  const avgTop = DATA.reduce((a, q) => a + q.top_5[0].similarity, 0) / total;
+  const types = new Set(DATA.map(q => q.query_type)).size;
+  const chunks = DATA.reduce((a, q) => a + q.top_5.length, 0);
+  statsEl.innerHTML = `
+    <div class="rag-stat"><div class="rag-stat-label">Queries</div><div class="rag-stat-value">${total}</div></div>
+    <div class="rag-stat"><div class="rag-stat-label">Query types</div><div class="rag-stat-value">${types}</div></div>
+    <div class="rag-stat"><div class="rag-stat-label">Retrieved chunks</div><div class="rag-stat-value">${chunks}</div></div>
+    <div class="rag-stat"><div class="rag-stat-label">Avg top-1 sim</div><div class="rag-stat-value">${avgTop.toFixed(3)}</div></div>
+  `;
+}
+
+function renderFilters() {
+  const types = ['all', ...new Set(DATA.map(q => q.query_type))];
+  filtersEl.innerHTML = types.map(t =>
+    `<button class="rag-filter ${activeType === t ? 'active' : ''}" data-type="${t}">${t}</button>`
+  ).join('');
+  filtersEl.querySelectorAll('.rag-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeType = btn.dataset.type;
+      renderFilters();
+      renderList();
+    });
+  });
+}
+
+function getFiltered() {
+  return DATA.filter(q => {
+    if (activeType !== 'all' && q.query_type !== activeType) return false;
+    if (searchTerm && !q.query.toLowerCase().includes(searchTerm) && !q.query_id.toLowerCase().includes(searchTerm)) return false;
+    return true;
+  });
+}
+
+function renderList() {
+  const filtered = getFiltered();
+  countEl.textContent = filtered.length;
+  if (filtered.length === 0) {
+    listEl.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:20px; font-size:12px;">No matches</div>`;
+    return;
+  }
+  listEl.innerHTML = filtered.map(q => `
+    <button class="rag-item ${selectedId === q.query_id ? 'active' : ''}" data-id="${q.query_id}">
+      <div class="rag-item-id">${q.query_id}</div>
+      <div class="rag-item-text">${escapeHtml(q.query)}</div>
+      <div class="rag-item-type">${q.query_type}</div>
+    </button>
+  `).join('');
+  listEl.querySelectorAll('.rag-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedId = btn.dataset.id;
+      renderList();
+      renderDetail();
+    });
+  });
+}
+
+function renderDetail() {
+  if (!selectedId) return;
+  const q = DATA.find(x => x.query_id === selectedId);
+  if (!q) return;
+  const chunksHtml = q.top_5.map((c, i) => {
+    const col = scoreColor(c.similarity);
+    return `
+      <div class="rag-chunk">
+        <div class="rag-chunk-header">
+          <div class="rag-chunk-left">
+            <span class="rag-chunk-rank">#${i + 1}</span>
+            <div class="rag-chunk-meta">
+              <span><i class="ti ti-file-text" aria-hidden="true"></i>${escapeHtml(c.doc_id)}</span>
+              <span><i class="ti ti-bookmark" aria-hidden="true"></i>p.${c.page_no}</span>
+            </div>
+          </div>
+          <span class="rag-chunk-score" style="background:${col.fill}; color:${col.text};">${c.similarity.toFixed(3)}</span>
+        </div>
+        <div class="rag-score-bar"><div class="rag-score-fill" style="width:${(c.similarity * 100).toFixed(1)}%; background:${col.bar};"></div></div>
+        <p class="rag-chunk-text">${escapeHtml(c.chunk)}</p>
+      </div>
+    `;
+  }).join('');
+  detailEl.innerHTML = `
+    <div class="rag-detail-header">
+      <div class="rag-detail-meta">
+        <span class="rag-detail-id">${q.query_id}</span>
+        <span class="rag-detail-type">${q.query_type}</span>
+      </div>
+      <p class="rag-detail-query">${escapeHtml(q.query)}</p>
+    </div>
+    <div class="rag-section-title"><i class="ti ti-check" aria-hidden="true"></i>Expected answer</div>
+    <div class="rag-answer">${escapeHtml(q.answer)}</div>
+    <div class="rag-section-title"><i class="ti ti-list-search" aria-hidden="true"></i>Top ${q.top_5.length} retrieved chunks</div>
+    <div class="rag-chunks">${chunksHtml}</div>
+  `;
+}
+
+searchEl.addEventListener('input', e => { searchTerm = e.target.value.toLowerCase(); renderList(); });
+
+renderStats();
+renderFilters();
+renderList();
+</script>
