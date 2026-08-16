@@ -30,3 +30,5 @@ sentence-transformers
 
 # --- LLM: Gemma (generation) + Gemini (RAGAS-style judge) ---
 google-genai
+ollama
+matplotlib

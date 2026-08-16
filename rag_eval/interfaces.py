@@ -16,8 +16,13 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+from pydantic import BaseModel
 
+class RetrievalJudgement(BaseModel):
+    result: str  # "PASS" or "FAIL"
+    reason: str  # brief explanation
 
+    
 # --------------------------------------------------------------------------
 # Data model
 # --------------------------------------------------------------------------
@@ -27,6 +32,8 @@ class Page:
     page_no: int
     content: str
     metadata: Dict[str, Any] = field(default_factory=dict)
+
+
 
 
 @dataclass
