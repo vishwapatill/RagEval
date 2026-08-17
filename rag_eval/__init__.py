@@ -11,5 +11,5 @@ __all__ = [
     "FixedSizeChunker", "RecursiveChunker", "DoclingHybridChunker",
     "HuggingFaceEmbedder",
     "InMemoryCosineRetriever",
-    "GoogleGenAILLM", "QueryResult","OllamaLLM"
+    "GoogleGenAILLM", "QueryResult","OllamaLLM","HuggingFaceLLM"
 ]

@@ -260,3 +260,125 @@ class GroqLLM(LLM):
         content = response.choices[0].message.content
 
         return response_model.model_validate_json(content)
+
+# ═══════════════════════════════════════════════════════════════════════════
+# HuggingFace Local LLM (GPTQ / bfloat16)
+# ═══════════════════════════════════════════════════════════════════════════
+
+class HuggingFaceLLM(LLM):
+    """Runs a HuggingFace causal LM locally on GPU.
+
+    Designed for Kaggle T4 (15GB VRAM). Use the GPTQ-Int4 variant of
+    Qwen2.5-14B which fits comfortably at ~8GB.
+
+    Recommended model: "Qwen/Qwen2.5-14B-Instruct-GPTQ-Int4"
+
+    pip install auto-gptq optimum transformers
+
+    For structured output, the model is prompted to emit JSON matching
+    the Pydantic schema — no constrained decoding needed.
+    """
+
+    def __init__(
+        self,
+        model_name: str = "Qwen/Qwen2.5-14B-Instruct-GPTQ-Int4",
+        temperature: float = 0.0,
+        max_new_tokens: int = 512,
+        device: str = "cuda",
+    ):
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+
+        self._temperature = temperature
+        self._max_new_tokens = max_new_tokens
+
+        print(f"Loading {model_name} ...")
+        self._tokenizer = AutoTokenizer.from_pretrained(
+            model_name,
+            trust_remote_code=True,
+        )
+        self._model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            torch_dtype="auto",
+            device_map="auto",       # auto-places across available GPU/CPU
+            trust_remote_code=True,
+        )
+        self._model.eval()
+        print("Model loaded.")
+
+    def _generate(self, messages: list) -> str:
+        """Core generation — takes OpenAI-style messages list."""
+        import torch
+
+        text = self._tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True,
+        )
+        inputs = self._tokenizer(text, return_tensors="pt").to(self._model.device)
+
+        do_sample = self._temperature > 0.0
+        with torch.no_grad():
+            output = self._model.generate(
+                **inputs,
+                max_new_tokens=self._max_new_tokens,
+                temperature=self._temperature if do_sample else None,
+                do_sample=do_sample,
+                pad_token_id=self._tokenizer.eos_token_id,
+            )
+
+        # Decode only the newly generated tokens
+        new_tokens = output[0][inputs["input_ids"].shape[1]:]
+        return self._tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+
+    def invoke(
+        self,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+    ) -> str:
+        """Plain text completion."""
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+        return self._generate(messages)
+
+    def invoke_structured(
+        self,
+        prompt: str,
+        response_model: Type[T],
+        system_prompt: Optional[str] = None,
+    ) -> T:
+        """Structured output — returns a validated Pydantic instance.
+
+        Appends the JSON schema to the prompt so the model knows exactly
+        what to emit, then parses and validates the response.
+        """
+        import json
+        import re
+
+        schema = response_model.model_json_schema()
+        schema_str = json.dumps(schema, indent=2)
+
+        structured_prompt = (
+            f"{prompt}\n\n"
+            f"Respond with ONLY valid JSON matching this schema. "
+            f"No markdown fences, no explanation:\n{schema_str}"
+        )
+
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": structured_prompt})
+
+        raw = self._generate(messages)
+
+        # Strip markdown fences if model adds them anyway
+        cleaned = re.sub(r"^```(?:json)?\s*", "", raw.strip())
+        cleaned = re.sub(r"\s*```$", "", cleaned)
+
+        # Find first JSON object in response
+        match = re.search(r"\{.*\}", cleaned, re.DOTALL)
+        if match:
+            cleaned = match.group()
+
+        return response_model.model_validate_json(cleaned)
