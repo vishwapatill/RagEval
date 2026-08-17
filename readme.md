@@ -94,12 +94,15 @@ print(verdict.reason)  # "The retrieved chunks contain..."
 ### 4. Compare pipelines
 
 ```python
-from rag_eval.retrieval_evaluator import compare_retrievers
+import pandas as pd
 
-df = compare_retrievers({
-    "PDFPlumber + Recursive": pdfplumber_results,
-    "Docling + Recursive": docling_results,
-})
+comparison = pd.DataFrame({
+    "PDFPlumber + Recursive": pdfplumber_metrics,
+    "Docling + Recursive": docling_metrics,
+}).T
+
+comparison.index.name = "Pipeline"
+comparison
 ```
 
 ## Supported parsers
