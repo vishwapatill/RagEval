@@ -1,20 +1,15 @@
-from .interfaces import Page, Document, Chunk, Parser, Chunker, Embedder, Retriever, LLM
-from .parsers import PDFPlumberParser, DoclingParser
+from .interfaces import Page, Document, Chunk, Parser, Chunker, Embedder, LLM
+from .parsers import PDFPlumberParser, DoclingParser, get_parser, PARSER_REGISTRY
 from .chunkers import FixedSizeChunker, RecursiveChunker, DoclingHybridChunker
 from .embedders import HuggingFaceEmbedder
-from .retrievers import InMemoryCosineRetriever
-from .llms import GoogleGenAILLM
-from .evaluator import Evaluator, QueryResult, compare_pipelines
-from .pipeline import RAGPipeline, run_all_pipelines
+from .llms import GoogleGenAILLM, OllamaLLM
 
 __all__ = [
     "Page", "Document", "Chunk",
-    "Parser", "Chunker", "Embedder", "Retriever", "LLM",
-    "PDFPlumberParser", "DoclingParser",
+    "Parser", "Chunker", "Embedder", "LLM",
+    "PDFPlumberParser", "DoclingParser","get_parser", "PARSER_REGISTRY"
     "FixedSizeChunker", "RecursiveChunker", "DoclingHybridChunker",
     "HuggingFaceEmbedder",
     "InMemoryCosineRetriever",
-    "GoogleGenAILLM",
-    "Evaluator", "QueryResult", "compare_pipelines",
-    "RAGPipeline", "run_all_pipelines",
+    "GoogleGenAILLM", "QueryResult","OllamaLLM"
 ]

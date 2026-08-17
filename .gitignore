@@ -1,4 +1,7 @@
-t2-ragbench/*
 *__pycache__
 .venv/
 .env
+cache/
+pdfs/
+*.pkl
+*.pyc
