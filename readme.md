@@ -25,14 +25,12 @@ PDF ──→ Parser ──→ Chunker ──→ Embedder ──→ Retriever �
 
 ```
 rag_eval/
-├── interfaces.py        # Abstract base classes (Parser, Chunker, Embedder, Retriever, LLM)
+├── interfaces.py        # Abstract base classes (Parser, Chunker, Embedder, LLM)
 ├── parsers.py           # 7 parser implementations across 4 tiers
 ├── chunkers.py          # FixedSizeChunker, RecursiveChunker, DoclingHybridChunker
 ├── embedders.py         # HuggingFace sentence-transformer embedder
 ├── llms.py              # GoogleGenAILLM, OllamaLLM (both with structured output)
-├── retrieval_evaluator.py  # Lexical eval (precision, recall, MRR) + LLM judge
-├── metrics.py           # recall@k, precision@k, reciprocal rank, page hit
-└── utils.py             # Retry logic, JSON parsing helpers
+└── utils.py             # Retry logic, cosine similarity, fuzzy matching
 
 data_set/                # Ground truth from open_ragbench (see below)
 ├── queries.json
@@ -40,8 +38,7 @@ data_set/                # Ground truth from open_ragbench (see below)
 ├── qrels.json
 └── pdf_urls.json
 
-pdfs/                    # Downloaded PDFs (not committed)
-test_file.ipynb          # Full evaluation notebook: PDFPlumber vs Docling
+Final_Analysis.ipynb     # Full evaluation: PDFPlumber vs Docling
 ```
 
 ## Quick start
