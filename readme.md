@@ -1,8 +1,8 @@
-# RagEval
+# RagParserEval
 
 A modular framework to evaluate how **document parsing** affects **RAG retrieval quality**.
 
-Most RAG evaluations test the final generated answer — mixing retrieval quality with LLM quality. RagEval isolates the retrieval stage: given a query and ground-truth answer, did the retriever pull back chunks that contain the right information?
+Most RAG evaluations test the final generated answer — mixing retrieval quality with LLM quality. RagParserEval isolates the retrieval stage: given a query and ground-truth answer, did the retriever pull back chunks that contain the right information?
 
 The core idea is simple: swap the parser, keep everything else identical, and measure what changes.
 
@@ -18,7 +18,7 @@ PDF ──→ Parser ──→ Chunker ──→ Embedder ──→ Retriever �
 - **Chunk** the parsed output with pluggable chunkers (fixed-size, recursive, Docling HybridChunker)
 - **Embed** chunks and queries with HuggingFace sentence-transformers
 - **Retrieve** top-k chunks via cosine similarity
-- **Judge** retrieval quality with a local LLM (Ollama) or cloud LLM (Gemini) using structured Pydantic output — returns `PASS` or `FAIL` per query
+- **Judge** retrieval quality with a local LLM (Ollama) or cloud LLM (Gemini) using structured Pydantic output — returns `PASS` or `FAIL` per query with per-chunk relevance tagging
 - **Compare** pipelines side by side with precision@k, recall@k, and hit rate
 
 ## Project structure
@@ -49,9 +49,9 @@ test_file.ipynb          # Full evaluation notebook: PDFPlumber vs Docling
 ### 1. Install
 
 ```bash
-git clone https://github.com/vishwapatill/RagEval.git
-cd RagEval
-pip install -r requirements.txt
+git clone https://github.com/vishwapatill/RagParserEval.git
+cd RagParserEval
+pip install -r requirement.txt
 ```
 
 For GPU acceleration on Windows, disable torch.compile before running anything:
@@ -121,7 +121,7 @@ Install only the parsers you need — each has its own dependency tree.
 
 ## Ground truth dataset
 
-Evaluation queries and answers come from [Vectara's open_ragbench](https://huggingface.co/datasets/vectara/open_ragbench/tree/main/pdf/arxiv) (CC-BY-NC-4.0), which provides query–answer–document mappings over arXiv PDFs.
+Evaluation queries and answers come from [Vectara's open_ragbench](https://huggingface.co/datasets/vectara/open_ragbench/tree/main/pdf/arxiv) (CC-BY-NC-4.0), which provides query-answer-document mappings over arXiv PDFs.
 
 The `data_set/` folder contains:
 
@@ -132,9 +132,9 @@ The `data_set/` folder contains:
 
 ## LLM judge
 
-The evaluation uses a local LLM (via Ollama) or a cloud LLM (via Google GenAI) as a retrieval judge. The judge receives the query, ground-truth answer, and retrieved chunks, then returns a structured `PASS`/`FAIL` verdict with reasoning.
+The evaluation uses a local LLM (via Ollama) or a cloud LLM (via Google GenAI) as a retrieval judge. The judge receives the query, ground-truth answer, and retrieved chunks, then returns a structured `PASS`/`FAIL` verdict with per-chunk relevance tagging.
 
-Both LLM classes support Pydantic structured output — the model is constrained to emit valid JSON matching the schema, so there's no parsing failures or markdown fence issues.
+Both LLM classes support Pydantic structured output — the model is constrained to emit valid JSON matching the schema, so there are no parsing failures or markdown fence issues.
 
 ## Adding a new parser
 
