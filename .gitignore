@@ -1,3 +1,4 @@
 t2-ragbench/*
 *__pycache__
 .venv/
+.env

@@ -32,3 +32,4 @@ sentence-transformers
 google-genai
 ollama
 matplotlib
+groq

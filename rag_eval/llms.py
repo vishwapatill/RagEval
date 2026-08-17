@@ -155,3 +155,108 @@ class OllamaLLM(LLM):
         )
         return response_model.model_validate_json(response.message.content)
 
+# ═══════════════════════════════════════════════════════════════════════════
+# Groq
+# ═══════════════════════════════════════════════════════════════════════════
+
+class GroqLLM(LLM):
+    """Wraps the Groq Python SDK.
+
+    Supports both plain-text and structured Pydantic output.
+
+    pip install groq
+
+    Example:
+        llm = GroqLLM(
+            model="llama-3.3-70b-versatile",
+            api_key=os.getenv("GROQ_API_KEY"),
+        )
+    """
+
+    def __init__(
+        self,
+        model: str = "llama-3.3-70b-versatile",
+        api_key: Optional[str] = None,
+        temperature: float = 0.0,
+    ):
+        from groq import Groq
+
+        self._model = model
+        self._temperature = temperature
+        self._client = Groq(api_key=api_key)
+
+    def invoke(
+        self,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+    ) -> str:
+        """Plain text completion."""
+
+        messages = []
+
+        if system_prompt:
+            messages.append({
+                "role": "system",
+                "content": system_prompt,
+            })
+
+        messages.append({
+            "role": "user",
+            "content": prompt,
+        })
+
+        response = self._client.chat.completions.create(
+            model=self._model,
+            messages=messages,
+            temperature=self._temperature,
+        )
+
+        return response.choices[0].message.content
+
+    def invoke_structured(
+        self,
+        prompt: str,
+        response_model: Type[T],
+        system_prompt: Optional[str] = None,
+    ) -> T:
+        """Structured output using Groq's JSON Object mode.
+
+        The Pydantic schema is included in the prompt and the response
+        is validated using Pydantic.
+        """
+
+        import json
+
+        messages = []
+
+        if system_prompt:
+            messages.append({
+                "role": "system",
+                "content": system_prompt,
+            })
+
+        schema = response_model.model_json_schema()
+
+        structured_prompt = (
+            f"{prompt}\n\n"
+            "You MUST return a JSON object matching the following schema:\n"
+            f"{json.dumps(schema, indent=2)}\n\n"
+            "Return ONLY valid JSON. Do not include markdown fences "
+            "or any additional text."
+        )
+
+        messages.append({
+            "role": "user",
+            "content": structured_prompt,
+        })
+
+        response = self._client.chat.completions.create(
+            model=self._model,
+            messages=messages,
+            temperature=self._temperature,
+            response_format={"type": "json_object"},
+        )
+
+        content = response.choices[0].message.content
+
+        return response_model.model_validate_json(content)
